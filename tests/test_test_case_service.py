@@ -6,10 +6,10 @@ from typing import Any
 
 import pytest
 
-from app.models.databricks_sql import SQLExecutionResult
-from app.models.test_case import TestCase, TestCaseCreate
-from app.services.databricks_sql_service import DatabricksSQLExecutionError
-from app.services.test_case_service import (
+from backend.models.databricks_sql import SQLExecutionResult
+from backend.models.test_case import TestCase, TestCaseCreate
+from backend.services.databricks_sql_service import DatabricksSQLExecutionError
+from backend.services.test_case_service import (
     DuplicateTestCaseError,
     TestCaseNotFoundError,
     TestCaseService,

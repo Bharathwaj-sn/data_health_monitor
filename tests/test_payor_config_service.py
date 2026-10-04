@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import pytest
 
-from app.config import Settings
-from app.models.databricks_sql import SQLExecutionResult
-from app.services.databricks_sql_service import DatabricksSQLExecutionError
-from app.services.payor_config_service import (
+from backend.config import Settings
+from backend.models.databricks_sql import SQLExecutionResult
+from backend.services.databricks_sql_service import DatabricksSQLExecutionError
+from backend.services.payor_config_service import (
     DuplicatePayorConfigError,
     PayorConfigDeserializationError,
     PayorConfigNotFoundError,

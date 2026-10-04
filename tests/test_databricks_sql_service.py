@@ -4,8 +4,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from app.models.databricks_sql import SQLExecutionRequest, SQLParameter
-from app.services.databricks_sql_service import (
+from backend.models.databricks_sql import SQLExecutionRequest, SQLParameter
+from backend.services.databricks_sql_service import (
     DatabricksSQLExecutionError,
     DatabricksSQLService,
     DatabricksSQLTimeoutError,
@@ -117,7 +117,7 @@ def test_catalog_and_schema_are_passed_to_statement_execution():
             statement="SELECT * FROM test_cases",
             warehouse_id="wh-abc",
             catalog="main",
-            schema="qa",
+            schema_name="qa",
         )
     )
 

@@ -1,4 +1,4 @@
-# QA Automation API
+# Data Health Monitor API
 
 Minimal FastAPI + Streamlit POC for Databricks Unity Catalog metadata inspection.
 
@@ -16,7 +16,7 @@ Minimal FastAPI + Streamlit POC for Databricks Unity Catalog metadata inspection
 From the project root:
 
 ```powershell
-conda activate qa_auto
+conda activate data_health_monitor
 ```
 
 ### 2. Install dependencies
@@ -54,7 +54,7 @@ w = WorkspaceClient()
 Open Terminal 1 in the project root and run:
 
 ```powershell
-uvicorn app.main:app --reload
+uvicorn data_health_monitor.main:app --reload --log-level error --no-access-log
 ```
 
 Backend URLs:
@@ -62,28 +62,22 @@ Backend URLs:
 - http://127.0.0.1:8000/health
 - http://127.0.0.1:8000/docs
 
-## LLM configuration
+## Application logging
 
-LiteLLM is the application-facing LLM provider abstraction. Configure its provider and default model through environment variables; no credentials are stored in source control.
-
-```env
-LITELLM_MODEL=openai/gpt-4.1-mini
-LITELLM_API_BASE=
-LITELLM_API_KEY=
-```
-
-`LITELLM_MODEL` is the default model, while `LITELLM_API_BASE` and `LITELLM_API_KEY` support providers that require a custom API endpoint or key.
-
-## Databricks Model Serving configuration
-
-Databricks Model Serving invokes a configured model through the OpenAI-compatible Databricks AI Gateway and is intentionally separate from LiteLLM. It uses the existing Databricks unified authentication profile.
+Data Health Monitor writes all configured events to a rotating local file and
+only errors to stdout by default. Configure the file and console levels, file
+location, rotation size, and retained archives with these environment variables:
 
 ```env
-DATABRICKS_PROFILE=DEFAULT
-DATABRICKS_SERVING_MODEL=databricks-claude-haiku-4-5
+APP_LOG_LEVEL=INFO
+APP_CONSOLE_LOG_LEVEL=ERROR
+APP_LOG_FILE=logs/data_health_monitor.log
+APP_LOG_MAX_BYTES=10485760
+APP_LOG_BACKUP_COUNT=5
 ```
 
-`DATABRICKS_PROFILE` selects the configured Databricks authentication profile and `DATABRICKS_SERVING_MODEL` selects the AI Gateway model.
+The default configuration retains the active log and five archives of up to 10 MiB
+each. Local logs are written under `logs/`, which is excluded from source control.
 
 ## Run the Streamlit frontend
 
@@ -99,53 +93,29 @@ Frontend URL:
 
 ## API endpoints
 
+Data Health Monitor exposes its application API under `/api/v1`.
+
+V1 keeps stable resource IDs in URL paths. Catalog, schema, table, payor, file
+type, and search filters are validated JSON request bodies on explicit `POST`
+action endpoints. It does not use request bodies with `GET` operations.
+
 - GET /health
-- GET /api/databricks/catalogs
-- GET /api/databricks/catalogs/{catalog_name}/schemas
-- GET /api/databricks/catalogs/{catalog_name}/schemas/{schema_name}/objects
-- GET /api/databricks/catalogs/{catalog_name}/schemas/{schema_name}/tables/{table_name}
-- POST /api/llm/chat
-- POST /api/model-serving/predict
-- GET /api/qa/validation-sql
-- POST /api/qa/validation-sql/{validation_sql_id}/execute
-- POST /api/qa/validation-sql/batch-execute
+- GET /api/v1/databricks/catalogs
+- POST /api/v1/databricks/schemas:lookup
+- POST /api/v1/databricks/schema-objects:lookup
+- POST /api/v1/databricks/tables:lookup
+- GET /api/v1/test-cases
+- POST /api/v1/test-cases
+- GET /api/v1/test-cases/{test_case_id}
+- GET /api/v1/payor-config/payors
+- POST /api/v1/payor-config/file-types:lookup
+- POST /api/v1/payor-config:lookup
+- POST /api/v1/payor-config:search
+- POST /api/v1/qa/validation-sql:search
+- POST /api/v1/qa/validation-sql/{validation_sql_id}:execute
 
-## Batch validation SQL execution
-
-The Run Health Checks page can submit an ordered list of saved validation SQL IDs. The API executes each
-statement sequentially through the existing Databricks SQL Statement Execution API and continues after an
-individual query failure. Successful individual results use the existing result table; the batch aggregate is
-returned to Streamlit and remains in session state only.
-
-The default per-query and whole-batch deadlines can be overridden through environment variables:
-
-```env
-SQL_EXECUTION_TIMEOUT_SECONDS=300
-BATCH_EXECUTION_TIMEOUT_SECONDS=1800
-```
-
-## LLM configuration
-
-LiteLLM is the application-facing provider abstraction. Configure the provider and default model through environment variables or `.env` without committing credentials:
-
-```env
-LITELLM_MODEL=openai/gpt-4.1-mini
-LITELLM_API_BASE=
-LITELLM_API_KEY=
-```
-
-`LITELLM_MODEL` is required before calling `POST /api/llm/chat`. A request may override this default model.
-
-## Databricks Model Serving configuration
-
-Databricks Model Serving invokes a configured model through the OpenAI-compatible Databricks AI Gateway. It uses the existing unified authentication profile; do not add a personal access token to the application.
-
-```env
-DATABRICKS_PROFILE=your-profile
-DATABRICKS_SERVING_MODEL=databricks-claude-haiku-4-5
-```
-
-`LiteLLMService` and `DatabricksModelServingService` are intentionally separate. LiteLLM is a gateway to external providers, while Databricks Model Serving invokes a configured Databricks-hosted endpoint.
+The full contract, including metadata and Genie operations, is available at
+http://127.0.0.1:8000/docs.
 
 ## Example response
 
