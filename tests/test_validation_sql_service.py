@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import pytest
 
-from app.config import Settings
-from app.models.databricks_sql import SQLExecutionResult
-from app.models.validation_sql import ValidationSQL, ValidationSQLCreate
-from app.services.databricks_sql_service import DatabricksSQLExecutionError
-from app.services.validation_sql_service import (
+from backend.config import Settings
+from backend.models.databricks_sql import SQLExecutionResult
+from backend.models.validation_sql import ValidationSQL, ValidationSQLCreate
+from backend.services.databricks_sql_service import DatabricksSQLExecutionError
+from backend.services.validation_sql_service import (
     ValidationSQLResultPersistenceError,
     ValidationSQLService,
 )

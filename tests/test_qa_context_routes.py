@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from app.api.routes import (
+from backend.api.dependencies import (
     get_batch_execution_service,
     get_genie_context_service,
     get_genie_space_coordinator,
@@ -9,16 +9,16 @@ from app.api.routes import (
     get_test_case_service,
     get_validation_sql_service,
 )
-from app.main import app
-from app.models.genie import GenieSQLGeneration, GenieSerializedSpace
-from app.models.payor_config import PayorConfig
-from app.models.qa_context import QAContext, QAContextRequest, TableContext
-from app.services.genie_service import GenieError
-from app.models.test_case import TestCase
-from app.models.validation_sql import ValidationSQL
-from app.services.databricks_sql_service import DatabricksSQLExecutionError
-from app.services.qa_context_service import QAContextTestCaseNotFoundError
-from app.services.validation_sql_service import ValidationSQLNotFoundError
+from backend.main import app
+from backend.models.genie import GenieSQLGeneration, GenieSerializedSpace
+from backend.models.payor_config import PayorConfig
+from backend.models.qa_context import QAContext, QAContextRequest, TableContext
+from backend.services.genie_service import GenieError
+from backend.models.test_case import TestCase
+from backend.models.validation_sql import ValidationSQL
+from backend.services.databricks_sql_service import DatabricksSQLExecutionError
+from backend.services.qa_context_service import QAContextTestCaseNotFoundError
+from backend.services.validation_sql_service import ValidationSQLNotFoundError
 
 
 class FakeContextService:
@@ -385,7 +385,7 @@ def test_validation_sql_batch_execution_route_preserves_request_order():
     client = TestClient(app)
     try:
         response = client.post(
-            "/api/qa/validation-sql/batch-execute",
+            "/api/v1/qa/validation-sql/batch-execute",
             json={"validation_sql_ids": ["validation-3", "validation-1"]},
         )
     finally:
@@ -403,11 +403,11 @@ def test_validation_sql_batch_execution_route_rejects_empty_and_duplicate_ids():
     client = TestClient(app)
 
     empty_response = client.post(
-        "/api/qa/validation-sql/batch-execute",
+        "/api/v1/qa/validation-sql/batch-execute",
         json={"validation_sql_ids": []},
     )
     duplicate_response = client.post(
-        "/api/qa/validation-sql/batch-execute",
+        "/api/v1/qa/validation-sql/batch-execute",
         json={"validation_sql_ids": ["validation-1", "validation-1"]},
     )
 
@@ -424,7 +424,7 @@ def test_validation_sql_batch_execution_route_maps_unknown_ids_to_not_found():
     client = TestClient(app)
     try:
         response = client.post(
-            "/api/qa/validation-sql/batch-execute",
+            "/api/v1/qa/validation-sql/batch-execute",
             json={"validation_sql_ids": ["validation-missing"]},
         )
     finally:
@@ -443,7 +443,7 @@ def test_validation_sql_batch_execution_route_maps_databricks_errors_to_bad_gate
     client = TestClient(app)
     try:
         response = client.post(
-            "/api/qa/validation-sql/batch-execute",
+            "/api/v1/qa/validation-sql/batch-execute",
             json={"validation_sql_ids": ["validation-1"]},
         )
     finally:

@@ -232,8 +232,8 @@ def test_execution_timeout_cancels_statement_and_reports_confirmed_cancellation(
     client = SimpleNamespace(statement_execution=execution)
     service = DatabricksSQLService(client=client)
     monotonic_values = iter([0.0, 1.0, 1.0, 1.0])
-    monkeypatch.setattr("app.services.databricks_sql_service.time.monotonic", lambda: next(monotonic_values))
-    monkeypatch.setattr("app.services.databricks_sql_service.time.sleep", lambda _: None)
+    monkeypatch.setattr("backend.services.databricks_sql_service.time.monotonic", lambda: next(monotonic_values))
+    monkeypatch.setattr("backend.services.databricks_sql_service.time.sleep", lambda _: None)
 
     with pytest.raises(DatabricksSQLTimeoutError) as exc_info:
         service.execute(
@@ -264,7 +264,7 @@ def test_execution_timeout_reports_unconfirmed_cancellation(monkeypatch):
     client = SimpleNamespace(statement_execution=execution)
     service = DatabricksSQLService(client=client)
     monotonic_values = iter([0.0, 1.0])
-    monkeypatch.setattr("app.services.databricks_sql_service.time.monotonic", lambda: next(monotonic_values))
+    monkeypatch.setattr("backend.services.databricks_sql_service.time.monotonic", lambda: next(monotonic_values))
 
     with pytest.raises(DatabricksSQLTimeoutError) as exc_info:
         service.execute(

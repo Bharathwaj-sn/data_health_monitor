@@ -10,12 +10,12 @@ class SQLParameter(BaseModel):
 
 
 class SQLExecutionRequest(BaseModel):
-    model_config = ConfigDict(validate_by_name=True, serialize_by_alias=True)
+    model_config = ConfigDict(serialize_by_alias=True)
 
     statement: str
     warehouse_id: str
     catalog: str | None = None
-    schema_name: str | None = Field(default=None, alias="schema")
+    schema_name: str | None = Field(default=None, serialization_alias="schema")
     parameters: list[SQLParameter] = Field(default_factory=list)
     wait_timeout: str = "30s"
     execution_timeout_seconds: float | None = Field(default=None, gt=0)

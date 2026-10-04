@@ -87,6 +87,7 @@ def test_test_case_id_generated():
 
 def test_create_test_case_uses_parameterized_insert():
     """create_test_case should pass user values as SQL parameters."""
+    initialize_response = SQLExecutionResult(status="SUCCEEDED")
     id_response = SQLExecutionResult(
         statement_id="stmt-select-max",
         status="SUCCEEDED",
@@ -102,7 +103,7 @@ def test_create_test_case_uses_parameterized_insert():
         row_count=0,
     )
 
-    sql_service = MockSQLService(responses=[id_response, insert_response])
+    sql_service = MockSQLService(responses=[initialize_response, id_response, insert_response])
     service = TestCaseService(sql_service=sql_service)
 
     create = TestCaseCreate(
@@ -117,9 +118,9 @@ def test_create_test_case_uses_parameterized_insert():
 
     service.create_test_case(create)
 
-    # First call is SELECT MAX for ID generation, second is INSERT
-    assert len(sql_service.calls) == 2
-    insert_call = sql_service.calls[1]
+    # Calls initialize the table, generate the next ID, and insert the test case.
+    assert len(sql_service.calls) == 3
+    insert_call = sql_service.calls[2]
     assert insert_call.statement
     assert ":pipeline" in insert_call.statement
     assert ":component" in insert_call.statement
@@ -132,6 +133,7 @@ def test_create_test_case_uses_parameterized_insert():
 
 def test_databricks_sql_service_is_called():
     """DatabricksSQLService.execute should be called for create."""
+    initialize_response = SQLExecutionResult(status="SUCCEEDED")
     id_response = SQLExecutionResult(
         statement_id="stmt-select-max",
         status="SUCCEEDED",
@@ -147,7 +149,7 @@ def test_databricks_sql_service_is_called():
         row_count=0,
     )
 
-    sql_service = MockSQLService(responses=[id_response, insert_response])
+    sql_service = MockSQLService(responses=[initialize_response, id_response, insert_response])
     service = TestCaseService(sql_service=sql_service)
 
     create = TestCaseCreate(
@@ -162,8 +164,7 @@ def test_databricks_sql_service_is_called():
 
     service.create_test_case(create)
 
-    # Both ID generation and INSERT should be called
-    assert len(sql_service.calls) == 2
+    assert len(sql_service.calls) == 3
 
 
 def test_get_test_case_uses_parameterized_select():
@@ -279,6 +280,7 @@ def test_list_test_cases_returns_empty_on_sql_error():
 
 def test_sql_parameters_include_values():
     """SQL parameters should include user input values."""
+    initialize_response = SQLExecutionResult(status="SUCCEEDED")
     id_response = SQLExecutionResult(
         statement_id="stmt-select-max",
         status="SUCCEEDED",
@@ -294,7 +296,7 @@ def test_sql_parameters_include_values():
         row_count=0,
     )
 
-    sql_service = MockSQLService(responses=[id_response, insert_response])
+    sql_service = MockSQLService(responses=[initialize_response, id_response, insert_response])
     service = TestCaseService(sql_service=sql_service)
 
     create = TestCaseCreate(
@@ -309,8 +311,7 @@ def test_sql_parameters_include_values():
 
     service.create_test_case(create)
 
-    # Second call is the INSERT with parameters
-    insert_call = sql_service.calls[1]
+    insert_call = sql_service.calls[2]
     param_map = {p.name: p.value for p in insert_call.parameters}
     assert param_map["pipeline"] == "Gold"
     assert param_map["component"] == "aggregation"

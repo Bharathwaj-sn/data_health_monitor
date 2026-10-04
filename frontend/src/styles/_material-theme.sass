@@ -1,0 +1,24 @@
+@use '@angular/material' as mat
+
+:root
+  color-scheme: light
+  --app-font-sans: 'IBM Plex Sans', sans-serif
+  --app-font-mono: 'IBM Plex Mono', monospace
+
+  @include mat.theme((
+    color: (
+      primary: mat.$azure-palette,
+      tertiary: mat.$blue-palette,
+      theme-type: light
+    ),
+    typography: (
+      plain-family: 'IBM Plex Sans',
+      brand-family: 'IBM Plex Sans',
+      bold-weight: 700,
+      medium-weight: 500,
+      regular-weight: 400
+    ),
+    density: 0
+  ))
+
+  @include mat.strong-focus-indicators()

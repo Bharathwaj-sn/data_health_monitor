@@ -10,7 +10,7 @@
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
-          "style": "scss",
+          "style": "sass",
           "type": "component",
           "addTypeToClassName": false
         },
@@ -47,9 +47,36 @@
           "options": {
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
-            "inlineStyleLanguage": "scss",
+            "inlineStyleLanguage": "sass",
+            "assets": [
+              {
+                "glob": "IBMPlexSans-Regular.woff2",
+                "input": "node_modules/@ibm/plex-sans/fonts/complete/woff2",
+                "output": "assets/fonts/ibm-plex-sans"
+              },
+              {
+                "glob": "IBMPlexSans-Medium.woff2",
+                "input": "node_modules/@ibm/plex-sans/fonts/complete/woff2",
+                "output": "assets/fonts/ibm-plex-sans"
+              },
+              {
+                "glob": "IBMPlexSans-Bold.woff2",
+                "input": "node_modules/@ibm/plex-sans/fonts/complete/woff2",
+                "output": "assets/fonts/ibm-plex-sans"
+              },
+              {
+                "glob": "IBMPlexMono-Regular.woff2",
+                "input": "node_modules/@ibm/plex-mono/fonts/complete/woff2",
+                "output": "assets/fonts/ibm-plex-mono"
+              },
+              {
+                "glob": "IBMPlexMono-Medium.woff2",
+                "input": "node_modules/@ibm/plex-mono/fonts/complete/woff2",
+                "output": "assets/fonts/ibm-plex-mono"
+              }
+            ],
             "styles": [
-              "src/styles.scss"
+              "src/styles.sass"
             ]
           },
           "configurations": {

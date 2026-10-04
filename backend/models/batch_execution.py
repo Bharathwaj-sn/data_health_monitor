@@ -5,7 +5,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from app.models.validation_sql import TestCaseResult, ValidationSQL
+from backend.models.validation_sql import TestCaseResult, ValidationSQL
 
 
 class BatchExecutionRequest(BaseModel):

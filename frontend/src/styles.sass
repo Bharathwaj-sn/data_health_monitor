@@ -1,0 +1,20 @@
+@use 'styles/fonts'
+@use 'styles/material-theme'
+
+*, *::before, *::after
+	box-sizing: border-box
+
+html, body
+	min-height: 100%
+
+body
+	margin: 0
+	background: var(--mat-sys-surface)
+	color: var(--mat-sys-on-surface)
+	font: var(--mat-sys-body-medium)
+
+button, input, select, textarea
+	font: inherit
+
+code, pre, kbd, samp, .app-monospace
+	font-family: var(--app-font-mono)

@@ -4,18 +4,18 @@ import time
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from app.config import Settings, get_settings
-from app.models.batch_execution import (
+from backend.config import Settings, get_settings
+from backend.models.batch_execution import (
     BatchExecutionRequest,
     BatchExecutionResult,
     BatchQueryExecutionResult,
 )
-from app.models.validation_sql import ValidationSQL
-from app.services.databricks_sql_service import (
+from backend.models.validation_sql import ValidationSQL
+from backend.services.databricks_sql_service import (
     DatabricksSQLExecutionError,
     DatabricksSQLTimeoutError,
 )
-from app.services.validation_sql_service import (
+from backend.services.validation_sql_service import (
     ValidationSQLNotFoundError,
     ValidationSQLResultPersistenceError,
     ValidationSQLService,

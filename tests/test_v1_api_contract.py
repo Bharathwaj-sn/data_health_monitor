@@ -31,6 +31,7 @@ EXPECTED_V1_OPERATIONS = {
     "/api/v1/qa/validation-sql": {"post"},
     "/api/v1/qa/validation-sql:search": {"post"},
     "/api/v1/qa/validation-sql/{validation_sql_id}:execute": {"post"},
+    "/api/v1/qa/validation-sql/batch-execute": {"post"},
     "/api/v1/genie-space/status": {"get"},
 }
 
@@ -49,6 +50,7 @@ V1_JSON_BODY_OPERATIONS = {
     ("/api/v1/qa/genie/conversations/{conversation_id}/messages", "post"),
     ("/api/v1/qa/validation-sql", "post"),
     ("/api/v1/qa/validation-sql:search", "post"),
+    ("/api/v1/qa/validation-sql/batch-execute", "post"),
 }
 
 

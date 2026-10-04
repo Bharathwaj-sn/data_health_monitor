@@ -6,6 +6,7 @@ from fastapi import Depends, Request
 
 from backend.config import get_settings
 from backend.repositories.metadata_repository import MetadataRepository
+from backend.services.batch_execution_service import BatchExecutionService
 from backend.services.databricks_service import DatabricksService
 from backend.services.databricks_sql_service import DatabricksSQLService
 from backend.services.genie_context_service import GenieContextService
@@ -77,3 +78,9 @@ def get_validation_sql_service(
     sql_service: Annotated[DatabricksSQLService, Depends(get_sql_service)],
 ) -> ValidationSQLService:
     return ValidationSQLService(sql_service=sql_service, settings=get_settings())
+
+
+def get_batch_execution_service(
+    validation_sql_service: Annotated[ValidationSQLService, Depends(get_validation_sql_service)],
+) -> BatchExecutionService:
+    return BatchExecutionService(validation_sql_service=validation_sql_service, settings=get_settings())

@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from app.models.batch_execution import BatchExecutionRequest
+from backend.models.batch_execution import BatchExecutionRequest
 
 
 def test_batch_request_requires_at_least_one_query():

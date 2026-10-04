@@ -4,15 +4,15 @@ from datetime import datetime, timezone
 
 import pytest
 
-from app.config import Settings
-from app.models.batch_execution import BatchExecutionRequest
-from app.models.validation_sql import SavedSQLExecutionResult, TestCaseResult, ValidationSQL
-from app.services.batch_execution_service import BatchExecutionService
-from app.services.databricks_sql_service import (
+from backend.config import Settings
+from backend.models.batch_execution import BatchExecutionRequest
+from backend.models.validation_sql import SavedSQLExecutionResult, TestCaseResult, ValidationSQL
+from backend.services.batch_execution_service import BatchExecutionService
+from backend.services.databricks_sql_service import (
     DatabricksSQLExecutionError,
     DatabricksSQLTimeoutError,
 )
-from app.services.validation_sql_service import (
+from backend.services.validation_sql_service import (
     ValidationSQLNotFoundError,
     ValidationSQLResultPersistenceError,
 )
@@ -221,7 +221,7 @@ def test_batch_marks_all_queries_skipped_when_batch_deadline_is_reached(monkeypa
     validation_sql_ids = ["validation-1", "validation-2"]
     service, validation_service = make_service(validation_sql_ids)
     monotonic_values = iter([0.0, 301.0])
-    monkeypatch.setattr("app.services.batch_execution_service.time.monotonic", lambda: next(monotonic_values))
+    monkeypatch.setattr("backend.services.batch_execution_service.time.monotonic", lambda: next(monotonic_values))
 
     result = service.execute_batch(BatchExecutionRequest(validation_sql_ids=validation_sql_ids))
 

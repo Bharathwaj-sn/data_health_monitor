@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from backend.api.dependencies import (
+    get_batch_execution_service,
     get_genie_context_service,
     get_genie_space_coordinator,
     get_qa_context_service,
@@ -10,10 +11,12 @@ from backend.api.dependencies import (
 )
 from backend.api.genie_prompt import sql_generation_message
 from backend.api.v1.schemas import ValidationSQLSearchRequest
+from backend.models.batch_execution import BatchExecutionRequest, BatchExecutionResult
 from backend.models.genie import GenieConversationMessageRequest, GenieSQLGeneration, GenieSerializedSpace
 from backend.models.qa_context import QAContext, QAContextRequest
 from backend.models.validation_sql import TestCaseResult, ValidationSQL, ValidationSQLCreate
 from backend.services.databricks_sql_service import DatabricksSQLExecutionError
+from backend.services.batch_execution_service import BatchExecutionService
 from backend.services.genie_context_service import GenieContextError, GenieContextService
 from backend.services.genie_service import GenieError
 from backend.services.genie_space_coordinator import GenieSpaceConfigurationError, GenieSpaceCoordinator
@@ -171,6 +174,22 @@ def execute_validation_sql(
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Unable to execute saved validation SQL.",
+        ) from exc
+
+
+@router.post("/qa/validation-sql/batch-execute", response_model=BatchExecutionResult)
+def execute_validation_sql_batch(
+    request: BatchExecutionRequest,
+    service: Annotated[BatchExecutionService, Depends(get_batch_execution_service)],
+):
+    try:
+        return service.execute_batch(request)
+    except ValidationSQLNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except DatabricksSQLExecutionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Unable to execute validation SQL batch.",
         ) from exc
 
 

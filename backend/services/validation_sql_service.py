@@ -4,15 +4,15 @@ import json
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from app.config import Settings, get_settings
-from app.models.databricks_sql import SQLExecutionRequest, SQLExecutionResult, SQLParameter
-from app.models.validation_sql import (
+from backend.config import Settings, get_settings
+from backend.models.databricks_sql import SQLExecutionRequest, SQLExecutionResult, SQLParameter
+from backend.models.validation_sql import (
     SavedSQLExecutionResult,
     TestCaseResult,
     ValidationSQL,
     ValidationSQLCreate,
 )
-from app.services.databricks_sql_service import DatabricksSQLExecutionError, DatabricksSQLService
+from backend.services.databricks_sql_service import DatabricksSQLExecutionError, DatabricksSQLService
 
 
 class ValidationSQLNotFoundError(RuntimeError):
@@ -106,7 +106,7 @@ VALUES (:validation_sql_id, :test_case_id, :target_table, :payor, :file_type, :g
                 ),
                 warehouse_id=self.settings.databricks_warehouse_id or "",
                 catalog=self.settings.validation_sql_catalog,
-                schema=self.settings.validation_sql_schema,
+                schema_name=self.settings.validation_sql_schema,
                 parameters=[
                     SQLParameter(name=name, value=validation_sql_id)
                     for name, validation_sql_id in zip(parameter_names, validation_sql_ids)
@@ -132,7 +132,7 @@ VALUES (:validation_sql_id, :test_case_id, :target_table, :payor, :file_type, :g
                 statement=saved_sql.generated_sql,
                 warehouse_id=self.settings.databricks_warehouse_id or "",
                 catalog=self.settings.databricks_catalog,
-                schema=self.settings.databricks_schema,
+                schema_name=self.settings.databricks_schema,
                 execution_timeout_seconds=execution_timeout_seconds,
             )
         )
