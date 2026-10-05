@@ -50,6 +50,10 @@
             "inlineStyleLanguage": "sass",
             "assets": [
               {
+                "glob": "**/*",
+                "input": "public"
+              },
+              {
                 "glob": "IBMPlexSans-Regular.woff2",
                 "input": "node_modules/@ibm/plex-sans/fonts/complete/woff2",
                 "output": "assets/fonts/ibm-plex-sans"
@@ -84,7 +88,7 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
+                  "maximumWarning": "600kB",
                   "maximumError": "1MB"
                 },
                 {
@@ -105,6 +109,9 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "proxyConfig": "proxy.conf.json"
+          },
           "configurations": {
             "production": {
               "buildTarget": "qa-automation-frontend:build:production"

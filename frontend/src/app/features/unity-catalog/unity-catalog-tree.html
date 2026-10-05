@@ -1,0 +1,87 @@
+<section class="catalog-tool" aria-labelledby="unity-catalog-heading">
+  <header class="tool-header">
+    <div>
+      <p class="eyebrow">Data inventory</p>
+      <h2 id="unity-catalog-heading">Unity Catalog</h2>
+    </div>
+    <button
+      mat-icon-button
+      type="button"
+      aria-label="Reload catalogs"
+      matTooltip="Reload catalogs"
+      [disabled]="rootState() === 'loading'"
+      (click)="loadCatalogs()">
+      <svg lucideRefreshCw aria-hidden="true"></svg>
+    </button>
+  </header>
+
+  @switch (rootState()) {
+    @case ('loading') {
+      <div class="root-state" role="status">
+        <mat-spinner diameter="28"></mat-spinner>
+        <span>Loading catalogs…</span>
+      </div>
+    }
+    @case ('empty') {
+      <div class="root-state">
+        <svg lucideDatabase aria-hidden="true"></svg>
+        <span>No catalogs are available.</span>
+      </div>
+    }
+    @case ('error') {
+      <div class="root-state error-state" role="alert">
+        <svg lucideCircleAlert aria-hidden="true"></svg>
+        <span>{{ rootError() }}</span>
+        <button mat-stroked-button type="button" (click)="loadCatalogs()">Try again</button>
+      </div>
+    }
+    @case ('loaded') {
+      <mat-tree
+        #tree
+        [dataSource]="nodes()"
+        [childrenAccessor]="childrenAccessor"
+        [expansionKey]="expansionKey"
+        [trackBy]="trackBy">
+        <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding class="tree-row">
+          <span class="tree-toggle-spacer"></span>
+          @switch (node.kind) {
+            @case ('table') { <svg lucideTable2 class="node-icon table-icon" aria-hidden="true"></svg> }
+            @case ('volume') { <svg lucideHardDrive class="node-icon volume-icon" aria-hidden="true"></svg> }
+            @case ('error') { <svg lucideCircleAlert class="node-icon error-icon" aria-hidden="true"></svg> }
+            @default { <span class="node-icon"></span> }
+          }
+          <span class="node-label" [class.muted]="node.kind === 'empty'">{{ node.label }}</span>
+          @if (node.kind === 'error') {
+            <button mat-button type="button" class="retry-button" (click)="retry(node)">Retry</button>
+          }
+        </mat-tree-node>
+
+        <mat-nested-tree-node
+          *matTreeNodeDef="let node; when: isExpandable"
+          class="nested-node"
+          (expandedChange)="onExpanded(node, $event)">
+          <div class="tree-row" matTreeNodePadding>
+            <button mat-icon-button matTreeNodeToggle type="button" [attr.aria-label]="'Toggle ' + node.label">
+              @if (node.loadState === 'loading') {
+                <mat-spinner diameter="18"></mat-spinner>
+              } @else if (tree.isExpanded(node)) {
+                <svg lucideChevronDown aria-hidden="true"></svg>
+              } @else {
+                <svg lucideChevronRight aria-hidden="true"></svg>
+              }
+            </button>
+            @if (node.kind === 'catalog') {
+              <svg lucideDatabase class="node-icon catalog-icon" aria-hidden="true"></svg>
+            } @else {
+              <svg lucideFolder class="node-icon schema-icon" aria-hidden="true"></svg>
+            }
+            <span class="node-label">{{ node.label }}</span>
+          </div>
+          <div role="group" [style.display]="tree.isExpanded(node) ? '' : 'none'">
+            <ng-container matTreeNodeOutlet></ng-container>
+          </div>
+        </mat-nested-tree-node>
+      </mat-tree>
+    }
+  }
+</section>

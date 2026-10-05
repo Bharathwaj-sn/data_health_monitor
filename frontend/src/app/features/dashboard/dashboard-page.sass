@@ -1,0 +1,116 @@
+.dashboard-page
+  width: min(1440px, 100%)
+  margin: 0 auto
+  padding: 32px clamp(20px, 4vw, 56px) 64px
+
+.page-header
+  display: flex
+  align-items: end
+  justify-content: space-between
+  gap: 24px
+  margin-bottom: 28px
+
+.eyebrow
+  margin: 0 0 4px
+  color: var(--mat-sys-primary)
+  font: var(--mat-sys-label-large)
+  font-weight: 700
+
+h1
+  margin: 0
+  color: var(--mat-sys-on-surface)
+  font: var(--mat-sys-headline-large)
+  font-weight: 600
+
+.page-header button
+  letter-spacing: 0
+
+.page-header button svg
+  width: 18px
+  height: 18px
+
+.coverage-band
+  margin-bottom: 28px
+  padding: 20px 0 18px
+  border-block: 1px solid var(--mat-sys-outline-variant)
+
+.section-header
+  display: flex
+  align-items: end
+  justify-content: space-between
+  gap: 24px
+  margin-bottom: 18px
+
+.section-header h2
+  margin: 0
+  font: var(--mat-sys-title-large)
+  font-weight: 600
+
+.snapshot-age, .snapshot-time
+  color: var(--mat-sys-on-surface-variant)
+  font: var(--mat-sys-body-small)
+
+.coverage-metrics
+  display: grid
+  grid-template-columns: repeat(4, minmax(0, 1fr))
+  margin: 0
+
+.coverage-metrics div
+  min-width: 0
+  padding: 8px 24px
+  border-left: 1px solid var(--mat-sys-outline-variant)
+
+.coverage-metrics div:first-child
+  padding-left: 0
+  border-left: 0
+
+.coverage-metrics dt
+  color: var(--mat-sys-on-surface-variant)
+  font: var(--mat-sys-label-large)
+
+.coverage-metrics dd
+  margin: 4px 0 0
+  color: var(--mat-sys-on-surface)
+  font: var(--mat-sys-headline-medium)
+  font-family: var(--app-font-mono)
+  font-weight: 500
+
+.snapshot-time
+  margin: 14px 0 0
+
+.coverage-state
+  display: flex
+  min-height: 92px
+  align-items: center
+  justify-content: center
+  gap: 10px
+  color: var(--mat-sys-on-surface-variant)
+
+.coverage-state svg
+  width: 20px
+  height: 20px
+
+.error-state
+  color: var(--mat-sys-error)
+
+@media (max-width: 719px)
+  .dashboard-page
+    padding-top: 24px
+
+  .page-header
+    align-items: center
+
+  .page-header button span
+    display: none
+
+  .coverage-metrics
+    grid-template-columns: repeat(2, minmax(0, 1fr))
+    row-gap: 20px
+
+  .coverage-metrics div:nth-child(3)
+    padding-left: 0
+    border-left: 0
+
+@media (max-width: 419px)
+  .coverage-metrics div
+    padding-inline: 16px

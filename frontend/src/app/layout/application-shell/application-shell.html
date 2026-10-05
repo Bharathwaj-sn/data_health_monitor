@@ -1,0 +1,111 @@
+<mat-toolbar class="app-toolbar">
+  <button mat-icon-button type="button" class="mobile-menu" aria-label="Open navigation" (click)="toggleNavigation()">
+    <svg lucideMenu aria-hidden="true"></svg>
+  </button>
+
+  <a class="brand" routerLink="/dashboard" aria-label="Data Health Monitor overview">
+    <span class="brand-mark" aria-hidden="true"><svg lucideDatabase></svg></span>
+    <span>Data Health Monitor</span>
+  </a>
+
+  <span class="toolbar-spacer"></span>
+
+  <button mat-button type="button" class="status-button" [matMenuTriggerFor]="databricksMenu">
+    @switch (dashboardStore.identity().status) {
+      @case ('loading') { <span class="status-dot status-checking"></span> }
+      @case ('success') { <span class="status-dot status-connected"></span> }
+      @case ('error') { <span class="status-dot status-error"></span> }
+    }
+    <span>Databricks</span>
+  </button>
+
+  <button mat-button type="button" class="status-button metadata-button" [matMenuTriggerFor]="metadataMenu">
+    <svg lucideRefreshCw aria-hidden="true"></svg>
+    <span>Metadata</span>
+    @if (dashboardStore.metadataAge(); as age) {
+      <span class="status-detail">· {{ age }}</span>
+    }
+  </button>
+</mat-toolbar>
+
+<mat-menu #databricksMenu="matMenu" class="status-menu">
+  <div class="menu-content" (click)="$event.stopPropagation()">
+    <img src="/assets/brand/databricks-logo-primary-full.svg" alt="Databricks" class="databricks-logo">
+    <mat-divider></mat-divider>
+    @switch (dashboardStore.identity().status) {
+      @case ('loading') { <p>Checking connection…</p> }
+      @case ('success') {
+        <dl>
+          <dt>Status</dt><dd>Connected</dd>
+          <dt>Principal</dt><dd>{{ dashboardStore.identityData()?.user_name || 'Not provided' }}</dd>
+        </dl>
+      }
+      @case ('error') { <p class="error-text">{{ dashboardStore.identityError() }}</p> }
+    }
+    <button mat-stroked-button type="button" (click)="dashboardStore.reloadIdentity()">Check again</button>
+  </div>
+</mat-menu>
+
+<mat-menu #metadataMenu="matMenu" class="status-menu">
+  <div class="menu-content" (click)="$event.stopPropagation()">
+    <h2>Metadata</h2>
+    @switch (dashboardStore.metadata().status) {
+      @case ('loading') { <p>Loading metadata status…</p> }
+      @case ('empty') { <p>No metadata snapshot is available.</p> }
+      @case ('error') { <p class="error-text">{{ dashboardStore.metadataError() }}</p> }
+      @case ('success') {
+        <dl>
+          <dt>Last refreshed</dt><dd>{{ dashboardStore.metadataData()?.last_refreshed_at | date:'medium' }}</dd>
+          <dt>Catalogs</dt><dd>{{ dashboardStore.metadataData()?.catalog_count }}</dd>
+          <dt>Schemas</dt><dd>{{ dashboardStore.metadataData()?.schema_count }}</dd>
+          <dt>Tables</dt><dd>{{ dashboardStore.metadataData()?.table_count }}</dd>
+        </dl>
+      }
+    }
+    <button mat-stroked-button type="button" (click)="dashboardStore.reloadMetadata()">Reload status</button>
+  </div>
+</mat-menu>
+
+<mat-sidenav-container class="app-frame">
+  <mat-sidenav
+    class="app-sidenav"
+    [class.collapsed]="collapsed()"
+    [mode]="sidenavMode()"
+    [opened]="sidenavOpened()"
+    (closedStart)="drawerOpen.set(false)">
+    <nav aria-label="Primary navigation">
+      <a
+        class="nav-link"
+        routerLink="/dashboard"
+        routerLinkActive="active"
+        aria-label="Overview"
+        [matTooltip]="collapsed() ? 'Overview' : ''"
+        matTooltipPosition="right"
+        (click)="closeHandsetNavigation()">
+        <svg lucideHouse aria-hidden="true"></svg>
+        @if (!collapsed()) { <span>Overview</span> }
+      </a>
+    </nav>
+
+    @if (!isHandset() && !isCompact()) {
+      <button
+        mat-icon-button
+        type="button"
+        class="collapse-button"
+        [attr.aria-label]="collapsed() ? 'Expand navigation' : 'Collapse navigation'"
+        [matTooltip]="collapsed() ? 'Expand navigation' : 'Collapse navigation'"
+        matTooltipPosition="right"
+        (click)="toggleNavigation()">
+        @if (collapsed()) {
+          <svg lucidePanelLeftOpen aria-hidden="true"></svg>
+        } @else {
+          <svg lucidePanelLeftClose aria-hidden="true"></svg>
+        }
+      </button>
+    }
+  </mat-sidenav>
+
+  <mat-sidenav-content class="app-content">
+    <main><router-outlet /></main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

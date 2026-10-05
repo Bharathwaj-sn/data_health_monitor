@@ -1,0 +1,123 @@
+:host
+  display: block
+
+.catalog-tool
+  min-height: 440px
+  overflow: hidden
+  border: 1px solid var(--mat-sys-outline-variant)
+  border-radius: 8px
+  background: var(--mat-sys-surface)
+
+.tool-header
+  display: flex
+  min-height: 76px
+  align-items: center
+  justify-content: space-between
+  gap: 24px
+  padding: 14px 20px
+  border-bottom: 1px solid var(--mat-sys-outline-variant)
+
+.eyebrow
+  margin: 0 0 2px
+  color: var(--mat-sys-primary)
+  font: var(--mat-sys-label-medium)
+  font-weight: 700
+
+h2
+  margin: 0
+  font: var(--mat-sys-title-large)
+  font-weight: 600
+
+.tool-header svg
+  width: 19px
+  height: 19px
+
+.root-state
+  display: flex
+  min-height: 320px
+  flex-direction: column
+  align-items: center
+  justify-content: center
+  gap: 14px
+  padding: 32px
+  color: var(--mat-sys-on-surface-variant)
+  text-align: center
+
+.root-state > svg
+  width: 28px
+  height: 28px
+
+.error-state svg, .error-icon
+  color: var(--mat-sys-error)
+
+mat-tree
+  max-height: min(620px, calc(100dvh - 300px))
+  overflow: auto
+  padding: 8px 0 16px
+  background: transparent
+
+.tree-row
+  display: flex
+  min-height: 42px
+  align-items: center
+  gap: 9px
+  padding-right: 16px
+  border-radius: 4px
+
+.tree-row:hover
+  background: var(--mat-sys-surface-container-low)
+
+.tree-row button[mat-icon-button]
+  width: 36px
+  height: 36px
+  padding: 8px
+
+.tree-row button[mat-icon-button] svg
+  width: 18px
+  height: 18px
+
+.tree-toggle-spacer
+  width: 36px
+  flex: 0 0 36px
+
+.node-icon
+  width: 18px
+  height: 18px
+  flex: 0 0 18px
+
+.catalog-icon
+  color: var(--mat-sys-primary)
+
+.schema-icon
+  color: #8b6816
+
+.table-icon
+  color: #25726d
+
+.volume-icon
+  color: #73578f
+
+.node-label
+  min-width: 0
+  overflow: hidden
+  color: var(--mat-sys-on-surface)
+  font: var(--mat-sys-body-medium)
+  text-overflow: ellipsis
+  white-space: nowrap
+
+.node-label.muted
+  color: var(--mat-sys-on-surface-variant)
+  font-style: italic
+
+.retry-button
+  margin-left: auto
+
+@media (max-width: 639px)
+  .catalog-tool
+    min-height: 360px
+
+  .tool-header
+    padding-inline: 16px
+
+  mat-tree
+    max-height: none

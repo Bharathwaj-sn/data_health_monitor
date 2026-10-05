@@ -1,0 +1,55 @@
+<section class="dashboard-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Workspace overview</p>
+      <h1>Dashboard</h1>
+    </div>
+    <button mat-stroked-button type="button" (click)="reloadStatus()">
+      <svg lucideRefreshCw aria-hidden="true"></svg>
+      <span>Reload status</span>
+    </button>
+  </header>
+
+  <section class="coverage-band" aria-labelledby="coverage-heading">
+    <header class="section-header">
+      <div>
+        <p class="eyebrow">Indexed snapshot</p>
+        <h2 id="coverage-heading">Metadata coverage</h2>
+      </div>
+      @if (store.metadataAge(); as age) {
+        <span class="snapshot-age">Updated {{ age }}</span>
+      }
+    </header>
+
+    @switch (store.metadata().status) {
+      @case ('loading') {
+        <div class="coverage-state" role="status">
+          <mat-spinner diameter="24"></mat-spinner>
+          <span>Loading metadata…</span>
+        </div>
+      }
+      @case ('empty') {
+        <div class="coverage-state">No metadata snapshot is available.</div>
+      }
+      @case ('error') {
+        <div class="coverage-state error-state" role="alert">
+          <svg lucideCircleAlert aria-hidden="true"></svg>
+          <span>{{ store.metadataError() }}</span>
+        </div>
+      }
+      @case ('success') {
+        <dl class="coverage-metrics">
+          <div><dt>Catalogs</dt><dd>{{ store.metadataData()?.catalog_count }}</dd></div>
+          <div><dt>Schemas</dt><dd>{{ store.metadataData()?.schema_count }}</dd></div>
+          <div><dt>Tables</dt><dd>{{ store.metadataData()?.table_count }}</dd></div>
+          <div><dt>Volumes</dt><dd>{{ store.metadataData()?.volume_count }}</dd></div>
+        </dl>
+        <p class="snapshot-time">
+          Snapshot {{ store.metadataData()?.last_refreshed_at | date:'medium' }}
+        </p>
+      }
+    }
+  </section>
+
+  <app-unity-catalog-tree />
+</section>
