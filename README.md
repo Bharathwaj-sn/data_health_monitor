@@ -1,31 +1,42 @@
-# Data Health Monitor API
+# Data Health Monitor
 
-Minimal FastAPI + Streamlit POC for Databricks Unity Catalog metadata inspection.
+FastAPI and Angular application for inspecting Databricks Unity Catalog metadata
+and monitoring data-health coverage.
 
 ## Architecture
 
-- Streamlit frontend calls the FastAPI API
-- FastAPI routes delegate to a Databricks service
-- Databricks service uses the Databricks SDK `WorkspaceClient`
+- Angular serves the browser UI during local development
+- Angular proxies `/api` and `/health` requests to FastAPI on port 8000
+- FastAPI routes delegate to application services
+- Databricks services use the Databricks SDK `WorkspaceClient`
 - Unity Catalog metadata is read without storing credentials in source control
+- Browser state is held in memory and is not persisted locally
 
 ## Local environment setup
 
-### 1. Create and activate the Conda environment
+### 1. Create a Python virtual environment
 
 From the project root:
 
 ```powershell
-conda activate data_health_monitor
+python -m venv .venv
 ```
 
-### 2. Install dependencies
+### 2. Install backend dependencies
 
 ```powershell
-pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-### 3. Configure Databricks authentication
+### 3. Install frontend dependencies
+
+```powershell
+cd frontend
+npm ci
+cd ..
+```
+
+### 4. Configure Databricks authentication
 
 This project expects the developer machine to already have Databricks OAuth configured through the Databricks CLI or another supported Databricks client auth flow.
 
@@ -33,7 +44,11 @@ This project expects the developer machine to already have Databricks OAuth conf
 databricks auth login
 ```
 
+List the available profiles if needed:
+
+```powershell
 databricks auth profiles
+```
 
 Then validate the active identity:
 
@@ -49,18 +64,35 @@ from databricks.sdk import WorkspaceClient
 w = WorkspaceClient()
 ```
 
-## Run the backend
+## Run locally
 
-Open Terminal 1 in the project root and run:
+The backend and frontend run in separate terminals.
+
+### Terminal 1: Backend
+
+From the project root:
 
 ```powershell
-uvicorn data_health_monitor.main:app --reload --log-level error --no-access-log
+.\.venv\Scripts\python.exe -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 Backend URLs:
 
 - http://127.0.0.1:8000/health
 - http://127.0.0.1:8000/docs
+
+### Terminal 2: Frontend
+
+```powershell
+cd frontend
+npm start -- --host 127.0.0.1 --port 4200
+```
+
+Open the Dashboard at http://127.0.0.1:4200/dashboard.
+
+The Angular development server uses `frontend/proxy.conf.json` to forward API
+requests to FastAPI. Keep the backend running while using features that load
+Databricks or metadata data.
 
 ## Application logging
 
@@ -79,18 +111,6 @@ APP_LOG_BACKUP_COUNT=5
 The default configuration retains the active log and five archives of up to 10 MiB
 each. Local logs are written under `logs/`, which is excluded from source control.
 
-## Run the Streamlit frontend
-
-Open Terminal 2 in the project root and run:
-
-```powershell
-streamlit run frontend/streamlit_app.py
-```
-
-Frontend URL:
-
-- http://localhost:8501
-
 ## API endpoints
 
 Data Health Monitor exposes its application API under `/api/v1`.
@@ -99,35 +119,39 @@ V1 keeps stable resource IDs in URL paths. Catalog, schema, table, payor, file
 type, and search filters are validated JSON request bodies on explicit `POST`
 action endpoints. It does not use request bodies with `GET` operations.
 
-- GET /health
-- GET /api/v1/databricks/catalogs
-- POST /api/v1/databricks/schemas:lookup
-- POST /api/v1/databricks/schema-objects:lookup
-- POST /api/v1/databricks/tables:lookup
-- GET /api/v1/test-cases
-- POST /api/v1/test-cases
-- GET /api/v1/test-cases/{test_case_id}
-- GET /api/v1/payor-config/payors
-- POST /api/v1/payor-config/file-types:lookup
-- POST /api/v1/payor-config:lookup
-- POST /api/v1/payor-config:search
-- POST /api/v1/qa/validation-sql:search
-- POST /api/v1/qa/validation-sql/{validation_sql_id}:execute
+- `GET /health`
+- `GET /api/v1/databricks/whoami`
+- `GET /api/v1/databricks/catalogs`
+- `POST /api/v1/databricks/schemas:lookup`
+- `POST /api/v1/databricks/schema-objects:lookup`
+- `POST /api/v1/databricks/tables:lookup`
+- `GET /api/v1/metadata`
+- `GET /api/v1/metadata/summary`
+- `POST /api/v1/metadata/refresh`
+- `GET /api/v1/genie-space/status`
 
 The full contract, including metadata and Genie operations, is available at
 http://127.0.0.1:8000/docs.
 
-## Example response
+## Validation
 
-```json
-{
-  "status": "healthy"
-}
+Run backend tests from the project root:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest
+```
+
+Run frontend tests and the production build from `frontend/`:
+
+```powershell
+npm test -- --watch=false
+npm run build
 ```
 
 ## Notes
 
 - No Databricks secrets are stored in source files.
 - No custom authentication logic is implemented.
-- The app is intentionally simple and ready to extend later with more metadata intelligence.
+- `frontend/streamlit_app.py` is retained as the legacy proof-of-concept UI; the
+  Angular Dashboard is the current frontend.
 
