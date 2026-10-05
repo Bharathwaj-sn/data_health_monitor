@@ -11,7 +11,7 @@ logs/
 
 data/
 
-frontend/node_modules/
+node_modules/
 frontend/.angular/
 frontend/dist/
 logs/
