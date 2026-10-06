@@ -9,6 +9,8 @@ from backend.api.observability import register_request_observability
 from backend.api.v1.router import router as v1_router
 from backend.config import get_settings
 from backend.core.logging import configure_logging, get_logger, log_event
+from backend.database.engine import dispose_database_engine
+from backend.database.session import dispose_session_factory
 from backend.services.genie_service import GenieService
 from backend.services.genie_space_coordinator import GenieSpaceCoordinator
 
@@ -34,6 +36,8 @@ async def lifespan(app: FastAPI):
     try:
         yield
     finally:
+        dispose_session_factory()
+        dispose_database_engine()
         log_event(logging.INFO, "application_stopping")
 
 

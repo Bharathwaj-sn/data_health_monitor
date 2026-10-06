@@ -3,9 +3,12 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastapi import Depends, Request
+from sqlalchemy.orm import Session
 
 from backend.config import get_settings
-from backend.repositories.metadata_repository import MetadataRepository
+from backend.database import get_database_session
+from backend.repositories.metadata_repository import MetadataRepositoryProtocol
+from backend.repositories.sql_metadata_repository import SqlMetadataRepository
 from backend.services.batch_execution_service import BatchExecutionService
 from backend.services.databricks_service import DatabricksService
 from backend.services.databricks_sql_service import DatabricksSQLService
@@ -23,10 +26,17 @@ def get_databricks_service() -> DatabricksService:
     return DatabricksService(settings=get_settings())
 
 
+def get_metadata_repository(
+    session: Annotated[Session, Depends(get_database_session)],
+) -> MetadataRepositoryProtocol:
+    return SqlMetadataRepository(session)
+
+
 def get_metadata_service(
     databricks_service: Annotated[DatabricksService, Depends(get_databricks_service)],
+    repository: Annotated[MetadataRepositoryProtocol, Depends(get_metadata_repository)],
 ) -> MetadataService:
-    return MetadataService(databricks_service=databricks_service, repository=MetadataRepository())
+    return MetadataService(databricks_service=databricks_service, repository=repository)
 
 
 def get_sql_service() -> DatabricksSQLService:

@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import pytest
 from fastapi.testclient import TestClient
 
-from backend.api.dependencies import get_databricks_service
+from backend.api.dependencies import get_databricks_service, get_metadata_repository
 from backend.main import app
 from backend.models.metadata import MetadataRefreshRequest
 from backend.repositories.metadata_repository import MetadataRepository
@@ -40,12 +40,16 @@ class FakeDatabricksService:
 
 
 @pytest.fixture
-def client():
+def client(tmp_path):
     app.dependency_overrides[get_databricks_service] = lambda: FakeDatabricksService()
+    app.dependency_overrides[get_metadata_repository] = lambda: MetadataRepository(
+        file_path=tmp_path / "metadata.json"
+    )
     try:
         yield TestClient(app)
     finally:
         app.dependency_overrides.pop(get_databricks_service, None)
+        app.dependency_overrides.pop(get_metadata_repository, None)
 
 
 def test_health_endpoint(client):

@@ -12,6 +12,12 @@ and monitoring data-health coverage.
 - Unity Catalog metadata is read without storing credentials in source control
 - Browser state is held in memory and is not persisted locally
 
+## Documentation
+
+The [documentation index](docs/README.md) describes the current architecture,
+API surface, operator workflows, configuration, frontend, testing, and the
+legacy Streamlit client.
+
 ## Local environment setup
 
 ### 1. Create a Python virtual environment
@@ -55,6 +61,22 @@ Then validate the active identity:
 ```powershell
 databricks current-user me
 ```
+
+### 5. Configure local SQL Server metadata persistence
+
+Install Microsoft ODBC Driver 18 for SQL Server, then copy the database variable
+names from `.env.example` to the ignored `.env` file and set the real local SQL
+Server values. Do not commit credentials.
+
+Apply the schema after configuring those values:
+
+```powershell
+.\.venv\Scripts\alembic.exe -c alembic.ini upgrade head
+```
+
+FastAPI does not run migrations automatically. The metadata endpoints use SQL
+Server once configured; the former JSON repository remains only for isolated
+compatibility tests and direct callers.
 
 The SDK call pattern used in the project follows the working notebook implementation:
 

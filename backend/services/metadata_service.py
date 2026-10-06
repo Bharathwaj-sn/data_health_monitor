@@ -17,14 +17,14 @@ from backend.models.metadata import (
     MetadataTable,
     MetadataVolume,
 )
-from backend.repositories.metadata_repository import MetadataRepository
+from backend.repositories.metadata_repository import MetadataRepositoryProtocol
 from backend.services.databricks_service import DatabricksService
 
 
 class MetadataService:
-    def __init__(self, databricks_service: DatabricksService, repository: MetadataRepository | None = None):
+    def __init__(self, databricks_service: DatabricksService, repository: MetadataRepositoryProtocol):
         self.databricks_service = databricks_service
-        self.repository = repository or MetadataRepository()
+        self.repository = repository
 
     @staticmethod
     def _read_value(obj: Any, field_name: str, default=None):
@@ -85,16 +85,13 @@ class MetadataService:
 
             catalog_model = MetadataCatalog(name=catalog_name, metadata=MetadataNode(refreshed_at=refreshed_at), schemas=schemas)
 
-            snapshot = self.repository.update_catalog_metadata(catalog_name=catalog_name, catalog_data=catalog_model)
-            # attach refresh info with scope
-            snapshot.refresh = MetadataRefreshInfo(
+            refresh = MetadataRefreshInfo(
                 status="SUCCESS",
                 refreshed_at=refreshed_at,
                 duration_ms=int((perf_counter() - started_at) * 1000),
                 scope=MetadataScope(type="catalog", catalog_name=catalog_name),
             )
-            self.repository.save_snapshot(snapshot)
-            return snapshot
+            return self.repository.save_scope_metadata(refresh.scope, catalog_model, refresh)
 
         # SCHEMA scope: replace only the named schema inside the catalog
         if request.scope_type == "schema":
@@ -109,15 +106,13 @@ class MetadataService:
             volumes = [MetadataVolume(name=self._read_value(v, "name")) for v in self.databricks_service.list_volumes(catalog_name=catalog_name, schema_name=schema_name)]
             schema_model = MetadataSchema(name=schema_name, metadata=MetadataNode(refreshed_at=refreshed_at), tables=tables, volumes=volumes)
 
-            snapshot = self.repository.update_schema_metadata(catalog_name=catalog_name, schema_name=schema_name, schema_data=schema_model)
-            snapshot.refresh = MetadataRefreshInfo(
+            refresh = MetadataRefreshInfo(
                 status="SUCCESS",
                 refreshed_at=refreshed_at,
                 duration_ms=int((perf_counter() - started_at) * 1000),
                 scope=MetadataScope(type="schema", catalog_name=catalog_name, schema_name=schema_name),
             )
-            self.repository.save_snapshot(snapshot)
-            return snapshot
+            return self.repository.save_scope_metadata(refresh.scope, schema_model, refresh)
 
         # TABLE scope: update/add only the named table
         table_obj = self.databricks_service.get_table_metadata(
@@ -126,15 +121,13 @@ class MetadataService:
         table_model = self._table_model(request.catalog_name, request.schema_name, table_obj)
         table_model.metadata.refreshed_at = refreshed_at
 
-        snapshot = self.repository.update_table_metadata(catalog_name=request.catalog_name, schema_name=request.schema_name, table_name=request.table_name, table_data=table_model)
-        snapshot.refresh = MetadataRefreshInfo(
+        refresh = MetadataRefreshInfo(
             status="SUCCESS",
             refreshed_at=refreshed_at,
             duration_ms=int((perf_counter() - started_at) * 1000),
             scope=MetadataScope(type="table", catalog_name=request.catalog_name, schema_name=request.schema_name, table_name=request.table_name),
         )
-        self.repository.save_snapshot(snapshot)
-        return snapshot
+        return self.repository.save_scope_metadata(refresh.scope, table_model, refresh)
 
     def get_snapshot(self) -> MetadataSnapshot | None:
         return self.repository.load_snapshot()

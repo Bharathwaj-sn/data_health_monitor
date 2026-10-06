@@ -4,8 +4,16 @@ import json
 from copy import deepcopy
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Protocol
 
-from backend.models.metadata import MetadataCatalog, MetadataSnapshot, MetadataSchema, MetadataTable
+from backend.models.metadata import (
+    MetadataCatalog,
+    MetadataRefreshInfo,
+    MetadataSchema,
+    MetadataScope,
+    MetadataSnapshot,
+    MetadataTable,
+)
 
 
 class MetadataSnapshotNotFoundError(RuntimeError):
@@ -15,6 +23,21 @@ class MetadataSnapshotNotFoundError(RuntimeError):
 class MetadataTableNotFoundError(RuntimeError):
     def __init__(self, catalog_name: str, schema_name: str, table_name: str):
         super().__init__(f"Table '{catalog_name}.{schema_name}.{table_name}' was not found in the metadata snapshot.")
+
+
+class MetadataRepositoryProtocol(Protocol):
+    def load_snapshot(self) -> MetadataSnapshot | None: ...
+
+    def save_scope_metadata(
+        self,
+        scope: MetadataScope,
+        metadata: MetadataCatalog | MetadataSchema | MetadataTable,
+        refresh: MetadataRefreshInfo,
+    ) -> MetadataSnapshot: ...
+
+    def get_table_metadata(self, catalog_name: str, schema_name: str, table_name: str) -> MetadataTable: ...
+
+    def get_summary(self) -> dict: ...
 
 
 class MetadataRepository:
@@ -102,8 +125,14 @@ class MetadataRepository:
         self._atomic_write(payload)
         return snapshot
 
-    def update_table_metadata(self, catalog_name: str, schema_name: str, table_name: str, table_data: MetadataTable) -> MetadataSnapshot:
-        snapshot = self.load_snapshot() or self._empty_snapshot()
+    def _apply_table_metadata(
+        self,
+        snapshot: MetadataSnapshot,
+        catalog_name: str,
+        schema_name: str,
+        table_name: str,
+        table_data: MetadataTable,
+    ) -> None:
         catalog = self._find_catalog(snapshot, catalog_name)
         if catalog is None:
             catalog = MetadataCatalog(name=catalog_name, schemas=[])
@@ -117,17 +146,19 @@ class MetadataRepository:
         existing_table = self._find_table(schema, table_name)
         if existing_table is not None:
             for index, current_table in enumerate(schema.tables):
-                if current_table.name == table_name:
+                if current_table.name.casefold() == table_name.casefold():
                     schema.tables[index] = table_data
-                    break
+                    return
         else:
             schema.tables.append(table_data)
 
-        self._atomic_write(snapshot.model_dump(mode="json"))
-        return snapshot
-
-    def update_schema_metadata(self, catalog_name: str, schema_name: str, schema_data: MetadataSchema) -> MetadataSnapshot:
-        snapshot = self.load_snapshot() or self._empty_snapshot()
+    def _apply_schema_metadata(
+        self,
+        snapshot: MetadataSnapshot,
+        catalog_name: str,
+        schema_name: str,
+        schema_data: MetadataSchema,
+    ) -> None:
         catalog = self._find_catalog(snapshot, catalog_name)
         if catalog is None:
             catalog = MetadataCatalog(name=catalog_name, schemas=[])
@@ -141,11 +172,12 @@ class MetadataRepository:
         else:
             catalog.schemas.append(deepcopy(schema_data))
 
-        self._atomic_write(snapshot.model_dump(mode="json"))
-        return snapshot
-
-    def update_catalog_metadata(self, catalog_name: str, catalog_data: MetadataCatalog) -> MetadataSnapshot:
-        snapshot = self.load_snapshot() or self._empty_snapshot()
+    def _apply_catalog_metadata(
+        self,
+        snapshot: MetadataSnapshot,
+        catalog_name: str,
+        catalog_data: MetadataCatalog,
+    ) -> None:
         existing_catalog = self._find_catalog(snapshot, catalog_name)
         if existing_catalog is not None:
             existing_catalog.metadata = deepcopy(catalog_data.metadata)
@@ -153,6 +185,54 @@ class MetadataRepository:
         else:
             snapshot.catalogs.append(deepcopy(catalog_data))
 
+    def save_scope_metadata(
+        self,
+        scope: MetadataScope,
+        metadata: MetadataCatalog | MetadataSchema | MetadataTable,
+        refresh: MetadataRefreshInfo,
+    ) -> MetadataSnapshot:
+        snapshot = self.load_snapshot() or self._empty_snapshot()
+        if scope.type == "table":
+            if not isinstance(metadata, MetadataTable):
+                raise TypeError("Table refreshes require MetadataTable persistence data.")
+            assert scope.schema_name is not None
+            assert scope.table_name is not None
+            self._apply_table_metadata(
+                snapshot,
+                scope.catalog_name,
+                scope.schema_name,
+                scope.table_name,
+                metadata,
+            )
+        elif scope.type == "schema":
+            if not isinstance(metadata, MetadataSchema):
+                raise TypeError("Schema refreshes require MetadataSchema persistence data.")
+            assert scope.schema_name is not None
+            self._apply_schema_metadata(snapshot, scope.catalog_name, scope.schema_name, metadata)
+        else:
+            if not isinstance(metadata, MetadataCatalog):
+                raise TypeError("Catalog refreshes require MetadataCatalog persistence data.")
+            self._apply_catalog_metadata(snapshot, scope.catalog_name, metadata)
+
+        snapshot.refresh = refresh
+        self._atomic_write(snapshot.model_dump(mode="json"))
+        return snapshot
+
+    def update_table_metadata(self, catalog_name: str, schema_name: str, table_name: str, table_data: MetadataTable) -> MetadataSnapshot:
+        snapshot = self.load_snapshot() or self._empty_snapshot()
+        self._apply_table_metadata(snapshot, catalog_name, schema_name, table_name, table_data)
+        self._atomic_write(snapshot.model_dump(mode="json"))
+        return snapshot
+
+    def update_schema_metadata(self, catalog_name: str, schema_name: str, schema_data: MetadataSchema) -> MetadataSnapshot:
+        snapshot = self.load_snapshot() or self._empty_snapshot()
+        self._apply_schema_metadata(snapshot, catalog_name, schema_name, schema_data)
+        self._atomic_write(snapshot.model_dump(mode="json"))
+        return snapshot
+
+    def update_catalog_metadata(self, catalog_name: str, catalog_data: MetadataCatalog) -> MetadataSnapshot:
+        snapshot = self.load_snapshot() or self._empty_snapshot()
+        self._apply_catalog_metadata(snapshot, catalog_name, catalog_data)
         self._atomic_write(snapshot.model_dump(mode="json"))
         return snapshot
 
