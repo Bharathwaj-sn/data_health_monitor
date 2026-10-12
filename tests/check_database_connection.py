@@ -45,8 +45,10 @@ def check_database_connection() -> int:
             raise RuntimeError(f"Unexpected SELECT 1 result: {result!r}")
     except Exception as error:
         print("DATABASE_CONNECTION_FAILED")
+        print(f"sql_mode={configuration.sql_mode}")
         print(f"server={configuration.server}")
-        print(f"port={configuration.port}")
+        if configuration.sql_mode == "TCP":
+            print(f"port={configuration.port}")
         print(f"database={configuration.name}")
         print(f"driver={configuration.odbc_driver}")
         print(f"error_type={type(error).__name__}")
@@ -56,8 +58,10 @@ def check_database_connection() -> int:
         engine.dispose()
 
     print("DATABASE_CONNECTION_OK")
+    print(f"sql_mode={configuration.sql_mode}")
     print(f"server={configuration.server}")
-    print(f"port={configuration.port}")
+    if configuration.sql_mode == "TCP":
+        print(f"port={configuration.port}")
     print(f"database={configuration.name}")
     print(f"schema={configuration.schema}")
     print(f"driver={configuration.odbc_driver}")

@@ -7,6 +7,7 @@ from backend.config.settings import Settings
 
 
 DATABASE_ENVIRONMENT_VARIABLES = (
+    "SQL_MODE",
     "DATABASE_SERVER",
     "DATABASE_PORT",
     "DATABASE_NAME",
@@ -39,6 +40,7 @@ def test_database_configuration_loads_from_environment_file(tmp_path: Path, monk
             [
                 "DATABASE_SERVER=localhost",
                 "DATABASE_PORT=1433",
+                "SQL_MODE=TCP",
                 "DATABASE_NAME=data_health_monitor",
                 "DATABASE_SCHEMA=dhm",
                 "DATABASE_USERNAME=local_user",
@@ -53,6 +55,7 @@ def test_database_configuration_loads_from_environment_file(tmp_path: Path, monk
 
     assert configuration.server == "localhost"
     assert configuration.port == 1433
+    assert configuration.sql_mode == "TCP"
     assert configuration.name == "data_health_monitor"
     assert configuration.schema == "dhm"
     assert configuration.authentication_mode == "sql_password"
@@ -104,3 +107,26 @@ def test_database_authentication_mode_normalizes_sql_login_aliases(monkeypatch, 
     )
 
     assert settings.database_configuration().authentication_mode == "sql_password"
+
+
+@pytest.mark.parametrize("sql_mode", ["tcp", "TCP", "sm", "SM"])
+def test_sql_mode_normalizes_supported_transport_values(monkeypatch, sql_mode: str):
+    clear_database_environment(monkeypatch)
+
+    settings = Settings(
+        _env_file=None,
+        database_server=r".\SQLEXPRESS",
+        database_name="data_health_monitor",
+        database_username="local_user",
+        database_password="local_password",
+        sql_mode=sql_mode,
+    )
+
+    assert settings.database_configuration().sql_mode == sql_mode.upper()
+
+
+def test_sql_mode_rejects_unsupported_transport_value(monkeypatch):
+    clear_database_environment(monkeypatch)
+
+    with pytest.raises(ValidationError, match="SQL_MODE must be TCP or SM"):
+        Settings(_env_file=None, sql_mode="named_pipes")

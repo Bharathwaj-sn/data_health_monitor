@@ -12,6 +12,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class DatabaseConfiguration:
     server: str
     port: int
+    sql_mode: Literal["TCP", "SM"]
     name: str
     schema: str
     authentication_mode: Literal["sql_password"]
@@ -55,6 +56,7 @@ class Settings(BaseSettings):
     genie_space_title: str | None = None
     database_server: str | None = None
     database_port: int = Field(default=1433, gt=0, le=65535)
+    sql_mode: Literal["TCP", "SM"] = "TCP"
     database_name: str | None = None
     database_schema: str = "dhm"
     database_authentication_mode: Literal["sql_password"] = "sql_password"
@@ -106,6 +108,14 @@ class Settings(BaseSettings):
             return "sql_password"
         return normalized_value
 
+    @field_validator("sql_mode", mode="before")
+    @classmethod
+    def normalize_sql_mode(cls, value: str) -> str:
+        normalized_value = value.strip().upper()
+        if normalized_value in {"TCP", "SM"}:
+            return normalized_value
+        raise ValueError("SQL_MODE must be TCP or SM.")
+
     def database_configuration(self) -> DatabaseConfiguration:
         required_values = {
             "DATABASE_SERVER": self.database_server,
@@ -127,6 +137,7 @@ class Settings(BaseSettings):
         return DatabaseConfiguration(
             server=self.database_server,
             port=self.database_port,
+            sql_mode=self.sql_mode,
             name=self.database_name,
             schema=self.database_schema or "dhm",
             authentication_mode=self.database_authentication_mode,

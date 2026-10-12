@@ -46,6 +46,7 @@ set real local database values before calling a metadata endpoint.
 
 | Environment variable | Default | Used for |
 | --- | --- | --- |
+| `SQL_MODE` | `TCP` | `TCP` uses the configured host and port. `SM` uses Windows Shared Memory with a local SQL Server instance and ignores `DATABASE_PORT`. |
 | `DATABASE_SERVER` | Unset | Local SQL Server host; required when the database is used. |
 | `DATABASE_PORT` | `1433` | SQL Server port. |
 | `DATABASE_NAME` | Unset | Database name; required when the database is used. |
@@ -78,6 +79,12 @@ changing the database schema:
 
 The diagnostic executes only `SELECT 1` and redacts password-like values from
 connection failures.
+
+For local SQL Express Shared Memory, set `SQL_MODE=SM` and use the local
+instance name, such as `DATABASE_SERVER=.\SQLEXPRESS`. This mode requires
+Windows, pyodbc, and SQL Server Shared Memory to be enabled. It cannot connect
+to a remote SQL Server, Azure SQL, or an App Service deployment; use `SQL_MODE=TCP`
+for those environments.
 
 ## Databricks prerequisites
 
